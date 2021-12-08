@@ -1,29 +1,29 @@
 {
   "schemaVersion": 1,
-  "id": "modid",
+  "id": "fabricelyby",
   "version": "${version}",
 
-  "name": "Example Mod",
-  "description": "This is an example description! Tell everyone what your mod is about!",
+  "name": "Ely-by skin system for Fabric ML",
+  "description": "Bring skins to your offline servers!",
   "authors": [
-    "Me!"
+    "Aiefu"
   ],
   "contact": {
-    "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+    "homepage": "",
+    "sources": ""
   },
 
-  "license": "CC0-1.0",
-  "icon": "assets/modid/icon.png",
+  "license": "GPL-V3",
+  "icon": "assets/fabricelyby/icon.png",
 
   "environment": "*",
   "entrypoints": {
-    "main": [
-      "net.fabricmc.example.ExampleMod"
+    "server": [
+      "ru.aiefu.fabricelyby.FabricElyBy"
     ]
   },
   "mixins": [
-    "modid.mixins.json"
+    "fabricelyby.mixins.json"
   ],
 
   "depends": {
