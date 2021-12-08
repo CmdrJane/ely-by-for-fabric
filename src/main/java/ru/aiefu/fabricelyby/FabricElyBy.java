@@ -1,7 +1,11 @@
 package ru.aiefu.fabricelyby;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
+import com.mojang.authlib.properties.PropertyMap;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,7 +37,7 @@ public class FabricElyBy implements DedicatedServerModInitializer {
 
 	@Nullable
 	public static JsonElement getSkinData(String playerName) {
-		HttpURLConnection connection;
+		HttpURLConnection connection = null;
 		try {
 			connection = (HttpURLConnection) new URL(String.format("http://skinsystem.ely.by/textures/signed/%s?token=%s", playerName, cfg.serverToken)).openConnection();
 			if(connection.getResponseCode() == 204){
@@ -43,7 +47,23 @@ public class FabricElyBy implements DedicatedServerModInitializer {
 			return JsonParser.parseReader(new InputStreamReader(connection.getInputStream()));
 		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			if(connection != null){
+				try {
+					connection.getInputStream().close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 		return null;
+	}
+
+	public static void applySkin(GameProfile profile, JsonElement element){
+		JsonObject j = element.getAsJsonObject().getAsJsonArray("properties").get(0).getAsJsonObject();
+		Property property = new Property("textures", j.get("value").getAsString(), j.get("signature").getAsString());
+		PropertyMap map = profile.getProperties();
+		map.removeAll("textures");
+		map.put("textures", property);
 	}
 }

@@ -1,10 +1,7 @@
 package ru.aiefu.fabricelyby.mixin;
 
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.Property;
-import com.mojang.authlib.properties.PropertyMap;
 import net.minecraft.network.Connection;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerList;
@@ -22,11 +19,7 @@ public class PlayerListMixins {
         GameProfile gameProfile = serverPlayer.getGameProfile();
         JsonElement element = FabricElyBy.getSkinData(gameProfile.getName());
         if(element != null) {
-            JsonObject j = element.getAsJsonObject().getAsJsonArray("properties").get(0).getAsJsonObject();
-            Property property = new Property("textures", j.get("value").getAsString(), j.get("signature").getAsString());
-            PropertyMap map = gameProfile.getProperties();
-            map.removeAll("textures");
-            map.put("textures", property);
+            FabricElyBy.applySkin(gameProfile, element);
         }
     }
 }
