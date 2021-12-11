@@ -24,7 +24,7 @@ public class IOManager {
 
     public static void craftPaths() throws IOException {
         if(!Files.isDirectory(Paths.get("./config/ely-by-for-fabric"))){
-            Files.createDirectories(Paths.get("./plugins/ely-by-for-fabric"));
+            Files.createDirectories(Paths.get("./config/ely-by-for-fabric"));
         }
     }
 
