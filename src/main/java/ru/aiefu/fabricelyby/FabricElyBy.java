@@ -38,13 +38,14 @@ public class FabricElyBy implements DedicatedServerModInitializer {
 	@Nullable
 	public static JsonElement getSkinData(String playerName) {
 		HttpURLConnection connection = null;
+		JsonElement element = null;
 		try {
 			connection = (HttpURLConnection) new URL(String.format("http://skinsystem.ely.by/textures/signed/%s?proxy=true?token=%s", playerName, cfg.serverToken)).openConnection();
 			if(connection.getResponseCode() == 204){
 				FabricElyBy.LOGGER.warn(String.format("Unable to retrieve skin textures for %s! Textures not found on server!", playerName));
 				return null;
 			}
-			return JsonParser.parseReader(new InputStreamReader(connection.getInputStream()));
+			element = JsonParser.parseReader(new InputStreamReader(connection.getInputStream()));
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -56,7 +57,7 @@ public class FabricElyBy implements DedicatedServerModInitializer {
 				}
 			}
 		}
-		return null;
+		return element;
 	}
 
 	public static void applySkin(GameProfile profile, JsonElement element){
