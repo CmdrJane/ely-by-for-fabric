@@ -1,4 +1,4 @@
-package ru.aiefu.fabricelyby;
+package aiefu.fabricelyby;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -6,7 +6,7 @@ import com.google.gson.JsonParser;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
-import net.fabricmc.api.DedicatedServerModInitializer;
+import net.fabricmc.api.ModInitializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -16,14 +16,14 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class FabricElyBy implements DedicatedServerModInitializer {
+public class FabricElyBy implements ModInitializer {
 
 	public static final Logger LOGGER = LogManager.getLogger("fabricelyby");
 
 	public static Config cfg;
 
 	@Override
-	public void onInitializeServer() {
+	public void onInitialize() {
 		try {
 			IOManager.craftPaths();
 			IOManager.genCfg();
