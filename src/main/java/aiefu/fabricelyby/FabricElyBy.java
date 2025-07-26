@@ -7,14 +7,17 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
 import net.fabricmc.api.ModInitializer;
+import net.minecraft.server.MinecraftServer;
+import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.CompletableFuture;
 
 public class FabricElyBy implements ModInitializer {
 
@@ -23,7 +26,7 @@ public class FabricElyBy implements ModInitializer {
 	public static Config cfg;
 
 	@Override
-	public void onInitialize() {
+	public void onInitialize(){
 		try {
 			IOManager.craftPaths();
 			IOManager.genCfg();
@@ -35,29 +38,49 @@ public class FabricElyBy implements ModInitializer {
 		}
 	}
 
-	@Nullable
-	public static JsonElement getSkinData(String playerName) {
-		HttpURLConnection connection = null;
-		JsonElement element = null;
-		try {
-			connection = (HttpURLConnection) new URL(String.format("http://skinsystem.ely.by/textures/signed/%s?proxy=true?token=%s", playerName, cfg.serverToken)).openConnection();
-			if(connection.getResponseCode() == 204){
-				FabricElyBy.LOGGER.warn(String.format("Unable to retrieve skin textures for %s! Textures not found on server!", playerName));
+	public static void applySkinDataIfAvailableAsync(GameProfile profile, MinecraftServer server, Runnable r){
+		CompletableFuture.supplyAsync(() -> {
+			try {
+				HttpURLConnection c = FabricElyBy.createUrlConnection(new URL(String.format("http://skinsystem.ely.by/textures/signed/%s?proxy=true?token=%s", profile.getName(), cfg.serverToken)));
+				try(InputStreamReader reader = new InputStreamReader(c.getInputStream())){
+					return JsonParser.parseReader(reader);
+				} catch (IOException e) {
+					e.printStackTrace();
+					return null;
+				} finally {
+					c.disconnect();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
 				return null;
 			}
-			element = JsonParser.parseReader(new InputStreamReader(connection.getInputStream()));
+		}).thenAcceptAsync(e -> {
+			if(e != null){
+				FabricElyBy.applySkin(profile, e);
+			}
+		}, server).whenCompleteAsync((unused, throwable) -> r.run(), server);
+	}
+
+	public static void applySkinDataIfAvailable(GameProfile profile) throws IOException {
+		HttpURLConnection c = FabricElyBy.createUrlConnection(new URL(String.format("http://skinsystem.ely.by/textures/signed/%s?proxy=true", profile.getName())));
+		try(InputStreamReader reader = new InputStreamReader(c.getInputStream())){
+			applySkin(profile, JsonParser.parseReader(reader));
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
-			if(connection != null){
-				try {
-					connection.getInputStream().close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
+			c.disconnect();
 		}
-		return element;
+
+	}
+
+	public static HttpURLConnection createUrlConnection(final URL url) throws IOException {
+		Validate.notNull(url);
+		LOGGER.debug("Opening connection to " + url);
+		final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+		connection.setConnectTimeout(15000);
+		connection.setReadTimeout(15000);
+		connection.setUseCaches(false);
+		return connection;
 	}
 
 	public static void applySkin(GameProfile profile, JsonElement element){
@@ -66,5 +89,6 @@ public class FabricElyBy implements ModInitializer {
 		PropertyMap map = profile.getProperties();
 		map.removeAll("textures");
 		map.put("textures", property);
+		System.out.println("TASK EXECUTED");
 	}
 }
