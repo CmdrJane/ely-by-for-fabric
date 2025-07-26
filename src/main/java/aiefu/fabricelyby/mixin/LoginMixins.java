@@ -15,8 +15,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerLoginPacketListenerImpl.class)
 public class LoginMixins {
-    @Shadow private @Nullable GameProfile gameProfile;
     @Shadow @Final private MinecraftServer server;
+    @Shadow private @Nullable GameProfile authenticatedProfile;
     @Unique
     private boolean awaitingSkinData = true;
 
@@ -25,7 +25,7 @@ public class LoginMixins {
     @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
     private void getSkinDataAndProceed(CallbackInfo ci){
         if(!madeRequest){
-            FabricElyBy.applySkinDataIfAvailableAsync(gameProfile, server, () -> awaitingSkinData = false);
+            FabricElyBy.applySkinDataIfAvailableAsync(authenticatedProfile, server, () -> awaitingSkinData = false);
             madeRequest = true;
         }
         if(awaitingSkinData) ci.cancel();
